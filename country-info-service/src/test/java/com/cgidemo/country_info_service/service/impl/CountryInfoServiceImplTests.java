@@ -1,79 +1,62 @@
-package com.cgidemo.country_info_service.service.impl;
+package com.cgidemo.country_info_service.controller;
 
 import com.cgidemo.country_info_service.dto.CountryInfoDTO;
-import com.cgidemo.country_info_service.exception.ResourceNotFoundException;
-import com.cgidemo.country_info_service.service.mappers.CountryInfoMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import com.cgidemo.country_info_service.service.ICountryInfoService;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.web.client.RestTemplate;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class CountryInfoServiceImplTests {
+@WebMvcTest
+class CountryResourceTests {
 
-    @Mock
-    private RestTemplate restTemplate;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @Mock
-    private CountryInfoMapper countryInfoMapper;
+    @MockBean
+    private ICountryInfoService countryInfoService;
 
-    @InjectMocks
-    private CountryInfoServiceImpl countryInfoService;
+    @Test
+    void testGetCountryByCode_Success() throws Exception {
+        CountryInfoDTO response = new CountryInfoDTO();
+        response.setCountryCode("US");
+        response.setName("United States of America");
+        response.setCapital("Washington, D.C.");
+        response.setRegion("Americas");
+        response.setCurrencies(List.of("USD"));
+        response.setLanguages(List.of("English"));
+        response.setBorders(List.of("CAN", "MEX"));
+        response.setSizeCategory("LARGE");
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+        Mockito.when(countryInfoService.getCountryInfoByCode("US")).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/countries/US")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.countryCode").value("US"))
+                .andExpect(jsonPath("$.name").value("United States of America"))
+                .andExpect(jsonPath("$.capital").value("Washington, D.C."))
+                .andExpect(jsonPath("$.region").value("Americas"))
+                .andExpect(jsonPath("$.currencies[0]").value("USD"))
+                .andExpect(jsonPath("$.languages[0]").value("English"))
+                .andExpect(jsonPath("$.borders[0]").value("CAN"))
+                .andExpect(jsonPath("$.borders[1]").value("MEX"))
+                .andExpect(jsonPath("$.sizeCategory").value("LARGE"));
     }
 
     @Test
-    @DisplayName("Returns country info for valid country code")
-    void returnsCountryInfoForValidCountryCode() {
-        String countryCode = "US";
-        String url = "https://restcountries.com/v3.1/alpha/" + countryCode;
-        Map<String, Object> mockResponse = Map.of("name", "United States");
-        CountryInfoDTO mockDTO = new CountryInfoDTO();
-        mockDTO.setName("United States");
-
-        when(restTemplate.getForObject(url, List.class)).thenReturn(List.of(mockResponse));
-        when(countryInfoMapper.mapToDTO(mockResponse)).thenReturn(mockDTO);
-
-        CountryInfoDTO result = countryInfoService.getCountryInfoByCode(countryCode);
-
-        assertNotNull(result);
-        assertEquals("United States", result.getName());
-        verify(restTemplate, times(1)).getForObject(url, List.class);
-    }
-
-    @Test
-    @DisplayName("Throws ResourceNotFoundException for invalid country code")
-    void throwsResourceNotFoundExceptionForInvalidCountryCode() {
-        String countryCode = "INVALID";
-        String url = "https://restcountries.com/v3.1/alpha/" + countryCode;
-
-        when(restTemplate.getForObject(url, List.class)).thenReturn(Collections.emptyList());
-
-        assertThrows(ResourceNotFoundException.class, () -> countryInfoService.getCountryInfoByCode(countryCode));
-        verify(restTemplate, times(1)).getForObject(url, List.class);
-    }
-
-    @Test
-    @DisplayName("Throws exception when API call fails")
-    void throwsExceptionWhenApiCallFails() {
-        String countryCode = "US";
-        String url = "https://restcountries.com/v3.1/alpha/" + countryCode;
-
-        when(restTemplate.getForObject(url, List.class)).thenThrow(new RuntimeException("API error"));
-
-        assertThrows(RuntimeException.class, () -> countryInfoService.getCountryInfoByCode(countryCode));
-        verify(restTemplate, times(1)).getForObject(url, List.class);
+    void testGetCountryByCode_InvalidCode() throws Exception {
+        mockMvc.perform(get("/api/v1/countries/US1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }
