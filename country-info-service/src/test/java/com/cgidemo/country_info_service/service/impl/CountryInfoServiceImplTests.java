@@ -59,4 +59,13 @@ class CountryResourceTests {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
+    @Test
+    void testGetCountryByCode_NotFound() throws Exception {
+        Mockito.when(countryInfoService.getCountryInfoByCode("XX"))
+                .thenThrow(new com.cgidemo.country_info_service.exception.ResourceNotFoundException("Country code not found"));
+
+        mockMvc.perform(get("/api/v1/countries/XX")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }
