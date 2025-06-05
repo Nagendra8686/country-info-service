@@ -1,4 +1,4 @@
-package com.cgidemo.country_info_service.controller;
+package com.cgidemo.country_info_service.service.impl;
 
 import com.cgidemo.country_info_service.dto.CountryInfoDTO;
 import com.cgidemo.country_info_service.service.ICountryInfoService;
@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
-class CountryResourceTests {
+class CountryInfoServiceImplTests {
 
     @Autowired
     private MockMvc mockMvc;

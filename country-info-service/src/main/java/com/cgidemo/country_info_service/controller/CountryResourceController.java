@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/")
 @Validated
-public class CountryResource {
+public class CountryResourceController {
     @Autowired
     private ICountryInfoService countryInfoService;
 
